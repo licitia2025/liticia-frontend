@@ -2,10 +2,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { FileText, TrendingUp, Clock, Euro } from "lucide-react";
+import Navbar from "@/components/Navbar";
 
 export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       <div className="container mx-auto py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Liticia</h1>
@@ -14,7 +16,7 @@ export default function Dashboard() {
 
         {/* Métricas principales */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Licitaciones</CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
@@ -25,7 +27,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Presupuesto Total</CardTitle>
               <Euro className="h-4 w-4 text-muted-foreground" />
@@ -36,7 +38,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Nuevas Hoy</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
@@ -47,7 +49,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Tendencia</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -61,7 +63,7 @@ export default function Dashboard() {
 
         {/* Acciones rápidas */}
         <div className="grid gap-6 md:grid-cols-2 mb-8">
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader>
               <CardTitle>Licitaciones Recientes</CardTitle>
               <CardDescription>Últimas licitaciones TIC publicadas</CardDescription>
@@ -103,7 +105,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader>
               <CardTitle>Tecnologías Destacadas</CardTitle>
               <CardDescription>Tecnologías más demandadas esta semana</CardDescription>

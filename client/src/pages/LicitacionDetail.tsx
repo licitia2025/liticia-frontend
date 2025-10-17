@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRoute, Link } from "wouter";
 import { ArrowLeft, ExternalLink, Calendar, MapPin, Euro, Building2, FileText } from "lucide-react";
+import Navbar from "@/components/Navbar";
 
 // Datos de ejemplo (en producción vendrían de la API)
 const licitacionEjemplo = {
@@ -52,6 +53,7 @@ export default function LicitacionDetail() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       <div className="container mx-auto py-8">
         {/* Botón volver */}
         <Link href="/licitaciones">
@@ -77,7 +79,7 @@ export default function LicitacionDetail() {
 
           {/* Información clave */}
           <div className="grid gap-4 md:grid-cols-4 mb-6">
-            <Card>
+            <Card className="shadow-md">
               <CardHeader className="pb-3">
                 <CardDescription className="flex items-center gap-2">
                   <Euro className="h-4 w-4" />
@@ -90,7 +92,7 @@ export default function LicitacionDetail() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-md">
               <CardHeader className="pb-3">
                 <CardDescription className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
@@ -103,7 +105,7 @@ export default function LicitacionDetail() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-md">
               <CardHeader className="pb-3">
                 <CardDescription className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
@@ -120,7 +122,7 @@ export default function LicitacionDetail() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-md">
               <CardHeader className="pb-3">
                 <CardDescription className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
@@ -144,7 +146,7 @@ export default function LicitacionDetail() {
           </TabsList>
 
           <TabsContent value="resumen" className="space-y-4">
-            <Card>
+            <Card className="shadow-md">
               <CardHeader>
                 <CardTitle>Descripción</CardTitle>
               </CardHeader>
@@ -153,7 +155,7 @@ export default function LicitacionDetail() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-md">
               <CardHeader>
                 <CardTitle>Conceptos TIC</CardTitle>
               </CardHeader>
@@ -170,7 +172,7 @@ export default function LicitacionDetail() {
           </TabsContent>
 
           <TabsContent value="tecnico" className="space-y-4">
-            <Card>
+            <Card className="shadow-md">
               <CardHeader>
                 <CardTitle>Objetivo del Proyecto</CardTitle>
               </CardHeader>
@@ -179,7 +181,7 @@ export default function LicitacionDetail() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-md">
               <CardHeader>
                 <CardTitle>Requisitos Clave</CardTitle>
               </CardHeader>
@@ -195,7 +197,7 @@ export default function LicitacionDetail() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-md">
               <CardHeader>
                 <CardTitle>Stack Tecnológico Identificado</CardTitle>
               </CardHeader>
@@ -224,7 +226,7 @@ export default function LicitacionDetail() {
           </TabsContent>
 
           <TabsContent value="organo" className="space-y-4">
-            <Card>
+            <Card className="shadow-md">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5" />

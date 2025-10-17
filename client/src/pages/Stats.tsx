@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, Activity } from "lucide-react";
+import Navbar from "@/components/Navbar";
 
 export default function Stats() {
   // Datos de ejemplo
@@ -31,6 +32,7 @@ export default function Stats() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       <div className="container mx-auto py-8">
         {/* Header */}
         <div className="mb-8">
@@ -40,7 +42,7 @@ export default function Stats() {
 
         {/* Métricas generales */}
         <div className="grid gap-4 md:grid-cols-3 mb-8">
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Licitaciones</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
@@ -51,7 +53,7 @@ export default function Stats() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Presupuesto Total</CardTitle>
               <TrendingUp className="h-4 w-4 text-green-500" />
@@ -62,7 +64,7 @@ export default function Stats() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Presupuesto Promedio</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
@@ -76,7 +78,7 @@ export default function Stats() {
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Top Tecnologías */}
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader>
               <CardTitle>Tecnologías Más Demandadas</CardTitle>
               <CardDescription>Últimos 30 días</CardDescription>
@@ -103,7 +105,7 @@ export default function Stats() {
           </Card>
 
           {/* Top Conceptos */}
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader>
               <CardTitle>Conceptos TIC Principales</CardTitle>
               <CardDescription>Distribución por categoría</CardDescription>
@@ -151,7 +153,7 @@ export default function Stats() {
           </Card>
 
           {/* Distribución por tipo */}
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader>
               <CardTitle>Distribución por Tipo de Contrato</CardTitle>
             </CardHeader>
@@ -174,7 +176,7 @@ export default function Stats() {
           </Card>
 
           {/* Distribución por estado */}
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader>
               <CardTitle>Distribución por Estado</CardTitle>
             </CardHeader>

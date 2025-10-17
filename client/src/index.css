@@ -53,9 +53,9 @@
   --chart-4: var(--color-blue-700);
   --chart-5: var(--color-blue-800);
   --radius: 0.65rem;
-  --background: oklch(1 0 0);
+  --background: oklch(0.975 0.008 240); /* Azul muy clarito */
   --foreground: oklch(0.235 0.015 65);
-  --card: oklch(1 0 0);
+  --card: oklch(1 0 0); /* Blanco puro para tarjetas */
   --card-foreground: oklch(0.235 0.015 65);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.235 0.015 65);
@@ -67,7 +67,7 @@
   --accent-foreground: oklch(0.141 0.005 285.823);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
+  --border: oklch(0.93 0.008 240); /* Borde azul suave */
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.623 0.214 259.815);
   --sidebar: oklch(0.985 0 0);
