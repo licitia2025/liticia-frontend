@@ -2,7 +2,7 @@
  * Cliente API para conectar con el backend de Liticia
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://liticia-backend.onrender.com/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://liticia-backend-api.onrender.com/api/v1';
 
 export interface Licitacion {
   id: number;
@@ -143,7 +143,7 @@ class ApiClient {
     if (fecha_hasta) params.append('fecha_hasta', fecha_hasta);
     
     const query = params.toString();
-    const endpoint = `/estadisticas/resumen${query ? `?${query}` : ''}`;
+    const endpoint = `/licitaciones/stats/general${query ? `?${query}` : ''}`;
     
     return this.request<Estadisticas>(endpoint);
   }
