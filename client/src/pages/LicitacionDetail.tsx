@@ -1,55 +1,105 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRoute, Link } from "wouter";
-import { ArrowLeft, ExternalLink, Calendar, MapPin, Euro, Building2, FileText } from "lucide-react";
+import { ArrowLeft, ExternalLink, Calendar, MapPin, Euro, Building2, FileText, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
-
-// Datos de ejemplo (en producción vendrían de la API)
-const licitacionEjemplo = {
-  id: 1,
-  titulo: "Suministro de un sistema de protección para el correo electrónico de las Cortes de Aragón",
-  expediente: "242/2025",
-  estado: "EV",
-  organo: {
-    nombre: "Mesa de las Cortes de Aragón",
-    ciudad: "Zaragoza",
-    email: "contratacion@cortesaragon.es",
-    web: "https://www.cortesaragon.es"
-  },
-  tipo: "Suministros",
-  presupuesto: 66000,
-  lugar: "Zaragoza",
-  fecha: "2025-10-15",
-  fechaLimite: "2025-11-15",
-  conceptos: ["Ciberseguridad", "Cloud Computing"],
-  stackTecnologico: {
-    lenguajes_programacion: [],
-    frameworks: [],
-    bases_datos: [],
-    cloud: ["Microsoft Azure", "Office 365"],
-    devops: [],
-    otros: ["Microsoft Exchange", "Email Security"]
-  },
-  resumenTecnico: {
-    objetivo: "Implementar una solución de seguridad para correo electrónico que proteja contra spam, phishing, malware y ransomware",
-    requisitos_clave: [
-      "Integración con Microsoft Exchange y Office 365",
-      "Protección contra amenazas avanzadas (ATP)",
-      "Cumplimiento normativo RGPD",
-      "Alta disponibilidad 99.9%"
-    ],
-    complejidad: "Media",
-    duracion_estimada: "6 meses",
-    presupuesto_tipo: "Mediano"
-  },
-  descripcion: "Suministro e implementación de una solución de seguridad para correo electrónico que incluya protección contra spam, phishing, malware y ransomware. La solución debe integrarse con Microsoft Exchange y Office 365, proporcionando protección en tiempo real y análisis de amenazas avanzadas."
-};
+import { api, type Licitacion } from "@/lib/api";
 
 export default function LicitacionDetail() {
   const [, params] = useRoute("/licitaciones/:id");
   const id = params?.id;
+  const [licitacion, setLicitacion] = useState<Licitacion | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLicitacion = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await api.getLicitacion(parseInt(id));
+        setLicitacion(data);
+      } catch (err) {
+        console.error('Error fetching licitacion:', err);
+        setError('Error al cargar la licitación. Verifica que el backend esté funcionando.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLicitacion();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto py-8 flex items-center justify-center h-[60vh]">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Cargando licitación...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !licitacion) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto py-8">
+          <Card className="max-w-md mx-auto">
+            <CardHeader>
+              <CardTitle>Error</CardTitle>
+              <CardDescription>{error || 'Licitación no encontrada'}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/licitaciones">
+                <Button className="w-full">
+                  Volver a licitaciones
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const formatCurrency = (amount: number | null) => {
+    if (!amount) return 'No especificado';
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'No especificada';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { 
+      day: 'numeric', 
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
+  const getEstadoLabel = (estado: string | null) => {
+    const estados: Record<string, string> = {
+      'PUB': 'Publicada',
+      'EV': 'En evaluación',
+      'ADJ': 'Adjudicada',
+      'RES': 'Resuelta'
+    };
+    return estados[estado || ''] || estado || 'Desconocido';
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,13 +117,13 @@ export default function LicitacionDetail() {
         <div className="mb-6">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2">{licitacionEjemplo.titulo}</h1>
+              <h1 className="text-3xl font-bold mb-2">{licitacion.titulo}</h1>
               <p className="text-muted-foreground">
-                Expediente: {licitacionEjemplo.expediente}
+                Expediente: {licitacion.numero_expediente || 'No especificado'}
               </p>
             </div>
-            <Badge variant={licitacionEjemplo.estado === "PUB" ? "default" : "secondary"} className="text-lg px-4 py-2">
-              {licitacionEjemplo.estado === "PUB" ? "Publicada" : "En evaluación"}
+            <Badge variant={licitacion.estado === "PUB" ? "default" : "secondary"} className="text-lg px-4 py-2">
+              {getEstadoLabel(licitacion.estado)}
             </Badge>
           </div>
 
@@ -87,8 +137,8 @@ export default function LicitacionDetail() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">€{licitacionEjemplo.presupuesto.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">{licitacionEjemplo.tipo}</p>
+                <div className="text-2xl font-bold">{formatCurrency(licitacion.presupuesto_base)}</div>
+                <p className="text-xs text-muted-foreground mt-1">{licitacion.tipo_contrato || 'No especificado'}</p>
               </CardContent>
             </Card>
 
@@ -100,7 +150,7 @@ export default function LicitacionDetail() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{licitacionEjemplo.lugar}</div>
+                <div className="text-2xl font-bold">{licitacion.lugar_ejecucion || 'No especificado'}</div>
                 <p className="text-xs text-muted-foreground mt-1">Lugar de ejecución</p>
               </CardContent>
             </Card>
@@ -114,10 +164,10 @@ export default function LicitacionDetail() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {new Date(licitacionEjemplo.fechaLimite).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                  {formatDate(licitacion.fecha_fin_presentacion)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {new Date(licitacionEjemplo.fechaLimite).toLocaleDateString('es-ES', { year: 'numeric' })}
+                  Presentación de ofertas
                 </p>
               </CardContent>
             </Card>
@@ -130,8 +180,12 @@ export default function LicitacionDetail() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{licitacionEjemplo.resumenTecnico.complejidad}</div>
-                <p className="text-xs text-muted-foreground mt-1">{licitacionEjemplo.resumenTecnico.duracion_estimada}</p>
+                <div className="text-2xl font-bold">
+                  {licitacion.resumen_tecnico?.complejidad || 'No analizada'}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {licitacion.resumen_tecnico?.duracion_estimada || 'Duración no estimada'}
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -151,78 +205,152 @@ export default function LicitacionDetail() {
                 <CardTitle>Descripción</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">{licitacionEjemplo.descripcion}</p>
+                <p className="text-muted-foreground whitespace-pre-wrap">
+                  {licitacion.descripcion || 'No hay descripción disponible'}
+                </p>
               </CardContent>
             </Card>
 
-            <Card className="shadow-md">
-              <CardHeader>
-                <CardTitle>Conceptos TIC</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {licitacionEjemplo.conceptos.map((concepto) => (
-                    <Badge key={concepto} variant="outline" className="text-sm">
-                      {concepto}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            {licitacion.conceptos_tic && licitacion.conceptos_tic.length > 0 && (
+              <Card className="shadow-md">
+                <CardHeader>
+                  <CardTitle>Conceptos TIC</CardTitle>
+                  <CardDescription>Identificados automáticamente por IA</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {licitacion.conceptos_tic.map((concepto) => (
+                      <Badge key={concepto} variant="outline" className="text-sm">
+                        {concepto}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {licitacion.enlace && (
+              <Card className="shadow-md">
+                <CardHeader>
+                  <CardTitle>Enlace a PLACSP</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <a
+                    href={licitacion.enlace}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline flex items-center gap-1"
+                  >
+                    Ver licitación completa en la Plataforma de Contratación
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="tecnico" className="space-y-4">
-            <Card className="shadow-md">
-              <CardHeader>
-                <CardTitle>Objetivo del Proyecto</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">{licitacionEjemplo.resumenTecnico.objetivo}</p>
-              </CardContent>
-            </Card>
+            {licitacion.resumen_tecnico ? (
+              <>
+                <Card className="shadow-md">
+                  <CardHeader>
+                    <CardTitle>Objetivo del Proyecto</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">
+                      {licitacion.resumen_tecnico.objetivo || 'No disponible'}
+                    </p>
+                  </CardContent>
+                </Card>
 
-            <Card className="shadow-md">
-              <CardHeader>
-                <CardTitle>Requisitos Clave</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {licitacionEjemplo.resumenTecnico.requisitos_clave.map((req, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="text-primary mt-1">•</span>
-                      <span className="text-muted-foreground">{req}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+                {licitacion.resumen_tecnico.requisitos_clave && licitacion.resumen_tecnico.requisitos_clave.length > 0 && (
+                  <Card className="shadow-md">
+                    <CardHeader>
+                      <CardTitle>Requisitos Clave</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {licitacion.resumen_tecnico.requisitos_clave.map((req, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <span className="text-primary mt-1">•</span>
+                            <span className="text-muted-foreground">{req}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
 
-            <Card className="shadow-md">
-              <CardHeader>
-                <CardTitle>Stack Tecnológico Identificado</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {Object.entries(licitacionEjemplo.stackTecnologico).map(([categoria, tecnologias]) => {
-                    if (tecnologias.length === 0) return null;
-                    return (
-                      <div key={categoria}>
-                        <h4 className="text-sm font-semibold mb-2 capitalize">
-                          {categoria.replace(/_/g, ' ')}
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {tecnologias.map((tech) => (
-                            <Badge key={tech} variant="secondary">
-                              {tech}
-                            </Badge>
-                          ))}
-                        </div>
+                {licitacion.stack_tecnologico && (
+                  <Card className="shadow-md">
+                    <CardHeader>
+                      <CardTitle>Stack Tecnológico Identificado</CardTitle>
+                      <CardDescription>Detectado automáticamente por IA</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {Object.entries(licitacion.stack_tecnologico).map(([categoria, tecnologias]) => {
+                          if (!Array.isArray(tecnologias) || tecnologias.length === 0) return null;
+                          return (
+                            <div key={categoria}>
+                              <h4 className="text-sm font-semibold mb-2 capitalize">
+                                {categoria.replace(/_/g, ' ')}
+                              </h4>
+                              <div className="flex flex-wrap gap-2">
+                                {tecnologias.map((tech, idx) => (
+                                  <Badge key={`${tech}-${idx}`} variant="secondary">
+                                    {tech}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <Card className="shadow-md">
+                  <CardHeader>
+                    <CardTitle>Información Adicional</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium mb-1">Complejidad</p>
+                        <p className="text-muted-foreground">
+                          {licitacion.resumen_tecnico.complejidad || 'No especificada'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium mb-1">Duración Estimada</p>
+                        <p className="text-muted-foreground">
+                          {licitacion.resumen_tecnico.duracion_estimada || 'No especificada'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium mb-1">Tipo de Presupuesto</p>
+                        <p className="text-muted-foreground">
+                          {licitacion.resumen_tecnico.presupuesto_tipo || 'No especificado'}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <Card className="shadow-md">
+                <CardHeader>
+                  <CardTitle>Análisis Técnico No Disponible</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    Esta licitación aún no ha sido analizada por IA.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="organo" className="space-y-4">
@@ -230,30 +358,42 @@ export default function LicitacionDetail() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5" />
-                  {licitacionEjemplo.organo.nombre}
+                  {licitacion.organo_contratacion || 'Órgano no especificado'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
                   <p className="text-sm font-medium mb-1">Ubicación</p>
-                  <p className="text-muted-foreground">{licitacionEjemplo.organo.ciudad}</p>
+                  <p className="text-muted-foreground">
+                    {licitacion.lugar_ejecucion || 'No especificada'}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium mb-1">Email</p>
-                  <p className="text-muted-foreground">{licitacionEjemplo.organo.email}</p>
+                  <p className="text-sm font-medium mb-1">Fecha de Publicación</p>
+                  <p className="text-muted-foreground">
+                    {formatDate(licitacion.fecha_publicacion)}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium mb-1">Web</p>
-                  <a
-                    href={licitacionEjemplo.organo.web}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline flex items-center gap-1"
-                  >
-                    {licitacionEjemplo.organo.web}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
+                  <p className="text-sm font-medium mb-1">Fecha de Actualización</p>
+                  <p className="text-muted-foreground">
+                    {formatDate(licitacion.fecha_actualizacion)}
+                  </p>
                 </div>
+                {licitacion.enlace && (
+                  <div>
+                    <p className="text-sm font-medium mb-1">Enlace Oficial</p>
+                    <a
+                      href={licitacion.enlace}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline flex items-center gap-1"
+                    >
+                      Ver en PLACSP
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
