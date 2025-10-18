@@ -2,7 +2,7 @@ services:
   - type: web
     name: liticia-frontend
     env: static
-    buildCommand: pnpm install && pnpm run build
+    buildCommand: npm install -g pnpm && pnpm install && pnpm run build
     staticPublishPath: ./dist
     envVars:
       - key: VITE_API_URL
