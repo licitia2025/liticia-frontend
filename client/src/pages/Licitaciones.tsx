@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,52 +6,98 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "wouter";
-import { Search, Calendar, MapPin, Euro, SlidersHorizontal } from "lucide-react";
+import { Search, Calendar, MapPin, Euro, SlidersHorizontal, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
-// Datos de ejemplo (en producción vendrían de la API)
-const licitacionesEjemplo = [
-  {
-    id: 1,
-    titulo: "Suministro de un sistema de protección para el correo electrónico",
-    expediente: "242/2025",
-    organo: "Mesa de las Cortes de Aragón",
-    tipo: "Suministros",
-    presupuesto: 66000,
-    lugar: "Zaragoza",
-    estado: "EV",
-    conceptos: ["Ciberseguridad", "Cloud Computing"],
-    fecha: "2025-10-15"
-  },
-  {
-    id: 2,
-    titulo: "Servicio de soporte técnico y actualización de sistema PAE",
-    expediente: "A-08/26",
-    organo: "Universidad Autónoma de Madrid",
-    tipo: "Servicios",
-    presupuesto: 55125,
-    lugar: "Madrid",
-    estado: "EV",
-    conceptos: ["Soporte y Mantenimiento", "Desarrollo Web"],
-    fecha: "2025-10-14"
-  },
-  {
-    id: 3,
-    titulo: "Suministro de actualizaciones de licencias de CATIA",
-    expediente: "34259/25",
-    organo: "CSIC",
-    tipo: "Suministros",
-    presupuesto: 138000,
-    lugar: "Madrid",
-    estado: "PUB",
-    conceptos: ["Software", "Licencias"],
-    fecha: "2025-10-13"
-  }
-];
+const API_URL = import.meta.env.VITE_API_URL || 'https://liticia-backend.onrender.com';
+
+interface Licitacion {
+  id: number;
+  titulo: string;
+  expediente: string | null;
+  organo_contratacion: string | null;
+  tipo_contrato: string | null;
+  presupuesto_base: number | null;
+  lugar_ejecucion: string | null;
+  estado: string | null;
+  conceptos_tic: string[] | null;
+  fecha_actualizacion: string;
+  fecha_limite_presentacion: string | null;
+}
+
+interface ApiResponse {
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  items: Licitacion[];
+}
 
 export default function Licitaciones() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(true);
+  const [licitaciones, setLicitaciones] = useState<Licitacion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    fetchLicitaciones();
+  }, [page]);
+
+  const fetchLicitaciones = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`${API_URL}/api/v1/licitaciones/?page=${page}&limit=20`);
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const data: ApiResponse = await response.json();
+      setLicitaciones(data.items);
+      setTotalPages(data.total_pages);
+      setTotal(data.total);
+    } catch (err) {
+      console.error('Error fetching licitaciones:', err);
+      setError(err instanceof Error ? err.message : 'Error desconocido');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getEstadoBadge = (estado: string | null) => {
+    if (!estado) return { variant: "secondary" as const, text: "Desconocido" };
+    
+    const estadoMap: Record<string, { variant: "default" | "secondary" | "outline", text: string }> = {
+      'publicada': { variant: "default", text: "Publicada" },
+      'en_evaluacion': { variant: "secondary", text: "En evaluación" },
+      'adjudicada': { variant: "outline", text: "Adjudicada" },
+      'resuelta': { variant: "outline", text: "Resuelta" },
+      'anulada': { variant: "outline", text: "Anulada" },
+    };
+    
+    return estadoMap[estado] || { variant: "secondary" as const, text: estado };
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('es-ES');
+    } catch {
+      return 'N/A';
+    }
+  };
+
+  const filteredLicitaciones = licitaciones.filter(lic =>
+    searchTerm === "" || 
+    lic.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (lic.expediente && lic.expediente.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -100,14 +146,14 @@ export default function Licitaciones() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Todos</SelectItem>
-                        <SelectItem value="PUB">Publicada</SelectItem>
-                        <SelectItem value="EV">En evaluación</SelectItem>
-                        <SelectItem value="ADJ">Adjudicada</SelectItem>
+                        <SelectItem value="publicada">Publicada</SelectItem>
+                        <SelectItem value="en_evaluacion">En evaluación</SelectItem>
+                        <SelectItem value="adjudicada">Adjudicada</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {/* Tipo de contrato */}
+                  {/* Tipo de Contrato */}
                   <div className="space-y-2">
                     <Label>Tipo de Contrato</Label>
                     <Select>
@@ -126,7 +172,7 @@ export default function Licitaciones() {
                   {/* Presupuesto */}
                   <div className="space-y-2">
                     <Label>Presupuesto</Label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex gap-2">
                       <Input type="number" placeholder="Mín €" />
                       <Input type="number" placeholder="Máx €" />
                     </div>
@@ -144,7 +190,6 @@ export default function Licitaciones() {
                         <SelectItem value="madrid">Madrid</SelectItem>
                         <SelectItem value="barcelona">Barcelona</SelectItem>
                         <SelectItem value="valencia">Valencia</SelectItem>
-                        <SelectItem value="sevilla">Sevilla</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -166,7 +211,7 @@ export default function Licitaciones() {
                     </Select>
                   </div>
 
-                  <Button className="w-full" variant="outline">
+                  <Button className="w-full" variant="outline" onClick={() => setSearchTerm("")}>
                     Limpiar filtros
                   </Button>
                 </CardContent>
@@ -191,76 +236,145 @@ export default function Licitaciones() {
             {/* Resultados */}
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                Mostrando <span className="font-semibold">3</span> licitaciones
+                {loading ? (
+                  "Cargando..."
+                ) : error ? (
+                  <span className="text-destructive">Error: {error}</span>
+                ) : (
+                  <>
+                    Mostrando <span className="font-semibold">{filteredLicitaciones.length}</span> de{" "}
+                    <span className="font-semibold">{total}</span> licitaciones
+                  </>
+                )}
               </p>
             </div>
 
-            <div className="space-y-4">
-              {licitacionesEjemplo.map((lic) => (
-                <Card 
-                  key={lic.id} 
-                  className="shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.01] cursor-pointer"
-                >
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <Link href={`/licitaciones/${lic.id}`}>
-                          <CardTitle className="text-xl hover:text-primary transition-colors">
-                            {lic.titulo}
-                          </CardTitle>
-                        </Link>
-                        <CardDescription className="mt-2">
-                          {lic.organo} • Expediente: {lic.expediente}
-                        </CardDescription>
-                      </div>
-                      <Badge variant={lic.estado === "PUB" ? "default" : "secondary"}>
-                        {lic.estado === "PUB" ? "Publicada" : "En evaluación"}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-4 md:grid-cols-3 mb-4">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Euro className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-semibold">
-                          €{lic.presupuesto.toLocaleString()}
-                        </span>
-                        <span className="text-muted-foreground">• {lic.tipo}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4" />
-                        {lic.lugar}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
-                        {new Date(lic.fecha).toLocaleDateString('es-ES')}
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      {lic.conceptos.map((concepto) => (
-                        <Badge key={concepto} variant="outline" className="hover:bg-accent transition-colors">
-                          {concepto}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {/* Loading state */}
+            {loading && (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            )}
+
+            {/* Error state */}
+            {error && !loading && (
+              <Card className="shadow-md">
+                <CardContent className="py-12 text-center">
+                  <p className="text-destructive mb-4">Error al cargar las licitaciones</p>
+                  <p className="text-sm text-muted-foreground mb-4">{error}</p>
+                  <Button onClick={fetchLicitaciones}>Reintentar</Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Licitaciones list */}
+            {!loading && !error && (
+              <div className="space-y-4">
+                {filteredLicitaciones.length === 0 ? (
+                  <Card className="shadow-md">
+                    <CardContent className="py-12 text-center">
+                      <p className="text-muted-foreground">No se encontraron licitaciones</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  filteredLicitaciones.map((lic) => (
+                    <Card 
+                      key={lic.id} 
+                      className="shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.01] cursor-pointer"
+                    >
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <Link href={`/licitaciones/${lic.id}`}>
+                              <CardTitle className="text-xl hover:text-primary transition-colors">
+                                {lic.titulo}
+                              </CardTitle>
+                            </Link>
+                            <CardDescription className="mt-2">
+                              {lic.organo_contratacion || 'Organismo no especificado'}
+                              {lic.expediente && ` • Expediente: ${lic.expediente}`}
+                            </CardDescription>
+                          </div>
+                          <Badge variant={getEstadoBadge(lic.estado).variant}>
+                            {getEstadoBadge(lic.estado).text}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid gap-4 md:grid-cols-3 mb-4">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Euro className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-semibold">
+                              {lic.presupuesto_base 
+                                ? `€${lic.presupuesto_base.toLocaleString()}` 
+                                : 'No especificado'}
+                            </span>
+                            {lic.tipo_contrato && (
+                              <span className="text-muted-foreground">• {lic.tipo_contrato}</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <MapPin className="h-4 w-4" />
+                            {lic.lugar_ejecucion || 'No especificado'}
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Calendar className="h-4 w-4" />
+                            {formatDate(lic.fecha_limite_presentacion || lic.fecha_actualizacion)}
+                          </div>
+                        </div>
+                        
+                        {lic.conceptos_tic && lic.conceptos_tic.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {lic.conceptos_tic.map((concepto) => (
+                              <Badge key={concepto} variant="outline" className="hover:bg-accent transition-colors">
+                                {concepto}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            )}
 
             {/* Paginación */}
-            <div className="mt-8 flex items-center justify-center gap-2">
-              <Button variant="outline" size="sm" disabled>
-                Anterior
-              </Button>
-              <Button variant="default" size="sm">1</Button>
-              <Button variant="outline" size="sm">2</Button>
-              <Button variant="outline" size="sm">3</Button>
-              <Button variant="outline" size="sm">
-                Siguiente
-              </Button>
-            </div>
+            {!loading && !error && totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={page === 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                >
+                  Anterior
+                </Button>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum = i + 1;
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={page === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPage(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={page === totalPages}
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                >
+                  Siguiente
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
