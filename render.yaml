@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: liticia-frontend
+    env: static
+    buildCommand: pnpm install && pnpm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://liticia-backend.onrender.com/api/v1
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
