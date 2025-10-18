@@ -9,7 +9,7 @@ import { Link } from "wouter";
 import { Search, Calendar, MapPin, Euro, SlidersHorizontal, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://liticia-backend.onrender.com';
+const API_URL = import.meta.env.VITE_API_URL || 'https://liticia-backend.onrender.com/api/v1';
 
 interface Licitacion {
   id: number;
@@ -52,7 +52,7 @@ export default function Licitaciones() {
     setError(null);
     
     try {
-      const response = await fetch(`${API_URL}/api/v1/licitaciones/?page=${page}&limit=20`);
+      const response = await fetch(`${API_URL}/licitaciones/?page=${page}&limit=20`);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
