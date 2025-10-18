@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm run build:static",
+  "outputDirectory": "dist/public",
+  "framework": null,
+  "env": {
+    "VITE_API_URL": "https://liticia-backend.onrender.com/api/v1"
+  }
+}
+
