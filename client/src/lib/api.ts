@@ -4,9 +4,18 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://liticia-backend-api.onrender.com/api/v1';
 
+export interface Documento {
+  id: number;
+  nombre: string;
+  tipo: string | null;
+  url_descarga: string | null;
+  tamano_bytes: number | null;
+}
+
 export interface Licitacion {
   id: number;
   titulo: string;
+  titulo_adaptado: string | null;
   expediente: string | null;
   estado: string | null;
   organo_contratacion: string | null;
@@ -23,6 +32,7 @@ export interface LicitacionDetail extends Licitacion {
   id_licitacion: string;
   link: string | null;
   resumen: string | null;
+  documentos: Documento[] | null;
   codigos_cpv: string[] | null;
   stack_tecnologico: Record<string, string[]> | null;
   resumen_tecnico: {

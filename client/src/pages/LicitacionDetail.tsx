@@ -117,7 +117,14 @@ export default function LicitacionDetail() {
         <div className="mb-6">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2">{licitacion.titulo}</h1>
+              <h1 className="text-3xl font-bold mb-2">
+                {licitacion.titulo_adaptado || licitacion.titulo}
+              </h1>
+              {licitacion.titulo_adaptado && (
+                <p className="text-sm text-muted-foreground italic mb-2">
+                  Título original: {licitacion.titulo}
+                </p>
+              )}
               <p className="text-muted-foreground">
                 Expediente: {licitacion.numero_expediente || 'No especificado'}
               </p>
@@ -244,6 +251,50 @@ export default function LicitacionDetail() {
                     Ver licitación completa en la Plataforma de Contratación
                     <ExternalLink className="h-4 w-4" />
                   </a>
+                </CardContent>
+              </Card>
+            )}
+
+            {licitacion.documentos && licitacion.documentos.length > 0 && (
+              <Card className="shadow-md">
+                <CardHeader>
+                  <CardTitle>Documentos Adjuntos</CardTitle>
+                  <CardDescription>
+                    Pliegos y documentación técnica de la licitación
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {licitacion.documentos.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-5 w-5 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">{doc.nombre}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {doc.tipo === 'pliego_administrativo' && 'Pliego de Cláusulas Administrativas'}
+                              {doc.tipo === 'pliego_tecnico' && 'Pliego de Prescripciones Técnicas'}
+                              {doc.tipo === 'anexo' && 'Documento Anexo'}
+                              {!doc.tipo && 'Documento'}
+                            </p>
+                          </div>
+                        </div>
+                        <a
+                          href={doc.url_descarga}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button size="sm" variant="outline">
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Descargar
+                          </Button>
+                        </a>
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             )}
