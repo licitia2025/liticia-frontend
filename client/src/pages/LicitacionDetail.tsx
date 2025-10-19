@@ -118,13 +118,15 @@ export default function LicitacionDetail() {
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <h1 className="text-3xl font-bold mb-2">
-                {licitacion.titulo_adaptado || licitacion.titulo}
+                {licitacion.titulo}
               </h1>
+              {/* TEMPORALMENTE DESHABILITADO - titulo_adaptado
               {licitacion.titulo_adaptado && (
                 <p className="text-sm text-muted-foreground italic mb-2">
                   Título original: {licitacion.titulo}
                 </p>
               )}
+              */}
               <p className="text-muted-foreground">
                 Expediente: {licitacion.numero_expediente || 'No especificado'}
               </p>

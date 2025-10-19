@@ -15,7 +15,7 @@ export interface Documento {
 export interface Licitacion {
   id: number;
   titulo: string;
-  titulo_adaptado: string | null;
+  // titulo_adaptado: string | null;  // TEMPORALMENTE DESHABILITADO
   expediente: string | null;
   estado: string | null;
   organo_contratacion: string | null;
