@@ -116,7 +116,8 @@ export default function LicitacionDetail() {
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-start justify-between mb-4">
-            <div clas              <h1 className="text-4xl font-bold text-foreground mb-2">
+            <div className="flex-1">
+              <h1 className="text-4xl font-bold text-foreground mb-2">
                 {licitacion.titulo_adaptado || licitacion.titulo}
               </h1>
               {licitacion.titulo_adaptado && licitacion.titulo_adaptado !== licitacion.titulo && (
