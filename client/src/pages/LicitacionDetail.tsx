@@ -120,11 +120,6 @@ export default function LicitacionDetail() {
               <h1 className="text-4xl font-bold text-foreground mb-2">
                 {licitacion.titulo_adaptado || licitacion.titulo}
               </h1>
-              {licitacion.titulo_adaptado && licitacion.titulo_adaptado !== licitacion.titulo && (
-                <p className="text-sm text-muted-foreground italic mb-2">
-                  Título original: {licitacion.titulo}
-                </p>
-              )}
               <p className="text-muted-foreground">
                 Expediente: {licitacion.numero_expediente || 'No especificado'}
               </p>
