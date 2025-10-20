@@ -212,6 +212,12 @@ export default function LicitacionDetail() {
                 <CardTitle>Descripción</CardTitle>
               </CardHeader>
               <CardContent>
+                {licitacion.titulo_adaptado && licitacion.titulo_adaptado !== licitacion.titulo && (
+                  <div className="mb-4 pb-4 border-b">
+                    <p className="text-sm font-semibold text-foreground mb-1">Título original:</p>
+                    <p className="text-muted-foreground">{licitacion.titulo}</p>
+                  </div>
+                )}
                 <p className="text-muted-foreground whitespace-pre-wrap">
                   {licitacion.descripcion || 'No hay descripción disponible'}
                 </p>

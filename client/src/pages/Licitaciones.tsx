@@ -14,6 +14,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://liticia-backend.onrende
 interface Licitacion {
   id: number;
   titulo: string;
+  titulo_adaptado: string | null;
   expediente: string | null;
   organo_contratacion: string | null;
   tipo_contrato: string | null;
@@ -287,7 +288,7 @@ export default function Licitaciones() {
                           <div className="flex-1">
                             <Link href={`/licitaciones/${lic.id}`}>
                               <CardTitle className="text-xl hover:text-primary transition-colors">
-                                {lic.titulo}
+                                {lic.titulo_adaptado || lic.titulo}
                               </CardTitle>
                             </Link>
                             <CardDescription className="mt-2">
