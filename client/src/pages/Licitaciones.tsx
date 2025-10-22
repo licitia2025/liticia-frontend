@@ -24,7 +24,6 @@ interface Licitacion {
   conceptos_tic: string[] | null;
   fecha_actualizacion: string;
   fecha_limite_presentacion: string | null;
-  fecha_publicacion: string | null;
 }
 
 interface ApiResponse {
@@ -35,9 +34,6 @@ interface ApiResponse {
   items: Licitacion[];
 }
 
-type EstadoFiltro = 'publicadas' | 'en_plazo' | 'adjudicadas';
-type OrdenTipo = 'relevante' | 'fecha_publicacion' | 'fecha_actualizacion' | 'fecha_limite' | 'presupuesto_desc' | 'presupuesto_asc' | 'fecha_vencimiento' | 'fecha_adjudicacion';
-
 export default function Licitaciones() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(true);
@@ -47,8 +43,6 @@ export default function Licitaciones() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [estadoFiltro, setEstadoFiltro] = useState<EstadoFiltro>('publicadas');
-  const [ordenamiento, setOrdenamiento] = useState<OrdenTipo>('relevante');
 
   useEffect(() => {
     fetchLicitaciones();
@@ -77,15 +71,18 @@ export default function Licitaciones() {
     }
   };
 
-  const isPublishedToday = (fechaPublicacion: string | null): boolean => {
-    if (!fechaPublicacion) return false;
-    const today = new Date();
-    const pubDate = new Date(fechaPublicacion);
-    return (
-      pubDate.getDate() === today.getDate() &&
-      pubDate.getMonth() === today.getMonth() &&
-      pubDate.getFullYear() === today.getFullYear()
-    );
+  const getEstadoBadge = (estado: string | null) => {
+    if (!estado) return { variant: "secondary" as const, text: "Desconocido" };
+    
+    const estadoMap: Record<string, { variant: "default" | "secondary" | "outline", text: string }> = {
+      'publicada': { variant: "default", text: "Publicada" },
+      'en_evaluacion': { variant: "secondary", text: "En evaluación" },
+      'adjudicada': { variant: "outline", text: "Adjudicada" },
+      'resuelta': { variant: "outline", text: "Resuelta" },
+      'anulada': { variant: "outline", text: "Anulada" },
+    };
+    
+    return estadoMap[estado] || { variant: "secondary" as const, text: estado };
   };
 
   const formatDate = (dateString: string | null) => {
@@ -97,154 +94,20 @@ export default function Licitaciones() {
     }
   };
 
-  const getDaysUntilDeadline = (fechaLimite: string | null): number | null => {
-    if (!fechaLimite) return null;
-    const today = new Date();
-    const deadline = new Date(fechaLimite);
-    const diffTime = deadline.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const filtrarPorEstado = (lic: Licitacion): boolean => {
-    const daysUntilDeadline = getDaysUntilDeadline(lic.fecha_limite_presentacion);
-    
-    switch (estadoFiltro) {
-      case 'publicadas':
-        // Mostrar todas las licitaciones activas
-        // Excluir solo las que están claramente adjudicadas/cerradas
-        if (lic.estado === 'adjudicada' || lic.estado === 'resuelta' || lic.estado === 'anulada') {
-          return false;
-        }
-        return true;
-      case 'en_plazo':
-        // Licitaciones con fecha límite definida y futura (aún se puede presentar)
-        return daysUntilDeadline !== null && daysUntilDeadline > 0;
-      case 'adjudicadas':
-        // Licitaciones con estado adjudicada/resuelta/anulada
-        return lic.estado === 'adjudicada' || 
-               lic.estado === 'resuelta' ||
-               lic.estado === 'anulada';
-      default:
-        return true;
-    }
-  };
-
-  const ordenarLicitaciones = (lics: Licitacion[]): Licitacion[] => {
-    const sorted = [...lics];
-    
-    switch (ordenamiento) {
-      case 'fecha_publicacion':
-        return sorted.sort((a, b) => {
-          const dateA = new Date(a.fecha_publicacion || a.fecha_actualizacion).getTime();
-          const dateB = new Date(b.fecha_publicacion || b.fecha_actualizacion).getTime();
-          return dateB - dateA;
-        });
-      case 'fecha_actualizacion':
-        return sorted.sort((a, b) => {
-          const dateA = new Date(a.fecha_actualizacion).getTime();
-          const dateB = new Date(b.fecha_actualizacion).getTime();
-          return dateB - dateA;
-        });
-      case 'fecha_limite':
-        return sorted.sort((a, b) => {
-          if (!a.fecha_limite_presentacion) return 1;
-          if (!b.fecha_limite_presentacion) return -1;
-          const dateA = new Date(a.fecha_limite_presentacion).getTime();
-          const dateB = new Date(b.fecha_limite_presentacion).getTime();
-          return dateA - dateB;
-        });
-      case 'presupuesto_desc':
-        return sorted.sort((a, b) => (b.presupuesto_base || 0) - (a.presupuesto_base || 0));
-      case 'presupuesto_asc':
-        return sorted.sort((a, b) => (a.presupuesto_base || 0) - (b.presupuesto_base || 0));
-      case 'fecha_vencimiento':
-        return sorted.sort((a, b) => {
-          if (!a.fecha_limite_presentacion) return 1;
-          if (!b.fecha_limite_presentacion) return -1;
-          const dateA = new Date(a.fecha_limite_presentacion).getTime();
-          const dateB = new Date(b.fecha_limite_presentacion).getTime();
-          return dateB - dateA;
-        });
-      case 'fecha_adjudicacion':
-        return sorted.sort((a, b) => {
-          const dateA = new Date(a.fecha_actualizacion).getTime();
-          const dateB = new Date(b.fecha_actualizacion).getTime();
-          return dateB - dateA;
-        });
-      case 'relevante':
-      default:
-        return sorted;
-    }
-  };
-
-  const filteredLicitaciones = ordenarLicitaciones(
-    licitaciones
-      .filter(lic =>
-        searchTerm === "" || 
-        lic.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (lic.expediente && lic.expediente.toLowerCase().includes(searchTerm.toLowerCase()))
-      )
-      .filter(filtrarPorEstado)
+  const filteredLicitaciones = licitaciones.filter(lic =>
+    searchTerm === "" || 
+    lic.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (lic.expediente && lic.expediente.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto py-8">
-        {/* Filtros de estado en tabs */}
+        {/* Header */}
         <div className="mb-6">
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Button
-              variant={estadoFiltro === 'publicadas' ? 'default' : 'outline'}
-              onClick={() => setEstadoFiltro('publicadas')}
-            >
-              Publicadas
-            </Button>
-            <Button
-              variant={estadoFiltro === 'en_plazo' ? 'default' : 'outline'}
-              onClick={() => setEstadoFiltro('en_plazo')}
-            >
-              En plazo
-            </Button>
-            <Button
-              variant={estadoFiltro === 'adjudicadas' ? 'default' : 'outline'}
-              onClick={() => setEstadoFiltro('adjudicadas')}
-            >
-              Adjudicadas
-            </Button>
-          </div>
-
-          {/* Barra de búsqueda y ordenamiento */}
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por título o expediente..."
-                className="pl-10 bg-white border-2 shadow-sm"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center gap-2 md:w-auto w-full">
-              <Label className="whitespace-nowrap text-sm font-semibold">Ordenar por:</Label>
-              <Select value={ordenamiento} onValueChange={(value) => setOrdenamiento(value as OrdenTipo)}>
-                <SelectTrigger className="md:w-[280px] w-full bg-white border-2 shadow-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="relevante">Más relevante</SelectItem>
-                  <SelectItem value="fecha_publicacion">Fecha publicación más reciente</SelectItem>
-                  <SelectItem value="fecha_actualizacion">Fecha de última actualización</SelectItem>
-                  <SelectItem value="fecha_limite">Fecha límite más próxima</SelectItem>
-                  <SelectItem value="presupuesto_desc">Presupuesto: de mayor a menor</SelectItem>
-                  <SelectItem value="presupuesto_asc">Presupuesto: de menor a mayor</SelectItem>
-                  <SelectItem value="fecha_vencimiento">Fecha de vencimiento más reciente</SelectItem>
-                  <SelectItem value="fecha_adjudicacion">Fecha de adjudicación más reciente</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <h1 className="text-4xl font-bold mb-2">Licitaciones TIC</h1>
+          <p className="text-muted-foreground">Explora licitaciones públicas del sector tecnológico</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -257,8 +120,40 @@ export default function Licitaciones() {
                     <SlidersHorizontal className="h-5 w-5" />
                     Filtros
                   </CardTitle>
+                  <CardDescription>Refina tu búsqueda</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Búsqueda */}
+                  <div className="space-y-2">
+                    <Label htmlFor="search">Búsqueda</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="search"
+                        placeholder="Título, expediente..."
+                        className="pl-10"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Estado */}
+                  <div className="space-y-2">
+                    <Label>Estado</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Todos" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="publicada">Publicada</SelectItem>
+                        <SelectItem value="en_evaluacion">En evaluación</SelectItem>
+                        <SelectItem value="adjudicada">Adjudicada</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   {/* Tipo de Contrato */}
                   <div className="space-y-2">
                     <Label>Tipo de Contrato</Label>
@@ -317,11 +212,7 @@ export default function Licitaciones() {
                     </Select>
                   </div>
 
-                  <Button className="w-full" variant="outline" onClick={() => {
-                    setSearchTerm("");
-                    setEstadoFiltro('publicadas');
-                    setOrdenamiento('relevante');
-                  }}>
+                  <Button className="w-full" variant="outline" onClick={() => setSearchTerm("")}>
                     Limpiar filtros
                   </Button>
                 </CardContent>
@@ -343,7 +234,21 @@ export default function Licitaciones() {
               </Button>
             </div>
 
-
+            {/* Resultados */}
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                {loading ? (
+                  "Cargando..."
+                ) : error ? (
+                  <span className="text-destructive">Error: {error}</span>
+                ) : (
+                  <>
+                    Mostrando <span className="font-semibold">{filteredLicitaciones.length}</span> de{" "}
+                    <span className="font-semibold">{total}</span> licitaciones
+                  </>
+                )}
+              </p>
+            </div>
 
             {/* Loading state */}
             {loading && (
@@ -391,11 +296,9 @@ export default function Licitaciones() {
                               {lic.expediente && ` • Expediente: ${lic.expediente}`}
                             </CardDescription>
                           </div>
-                          {isPublishedToday(lic.fecha_publicacion || lic.fecha_actualizacion) && (
-                            <Badge variant="default" className="bg-orange-500 hover:bg-orange-600">
-                              HOY
-                            </Badge>
-                          )}
+                          <Badge variant={getEstadoBadge(lic.estado).variant}>
+                            {getEstadoBadge(lic.estado).text}
+                          </Badge>
                         </div>
                       </CardHeader>
                       <CardContent>
