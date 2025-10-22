@@ -47,7 +47,7 @@ export default function Licitaciones() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [estadoFiltro, setEstadoFiltro] = useState<EstadoFiltro>('todas');
+  const [estadoFiltro, setEstadoFiltro] = useState<EstadoFiltro>('publicadas');
   const [ordenamiento, setOrdenamiento] = useState<OrdenTipo>('relevante');
 
   useEffect(() => {
@@ -191,12 +191,6 @@ export default function Licitaciones() {
         <div className="mb-6">
           <div className="flex flex-wrap gap-2 mb-4">
             <Button
-              variant={estadoFiltro === 'todas' ? 'default' : 'outline'}
-              onClick={() => setEstadoFiltro('todas')}
-            >
-              Todas
-            </Button>
-            <Button
               variant={estadoFiltro === 'publicadas' ? 'default' : 'outline'}
               onClick={() => setEstadoFiltro('publicadas')}
             >
@@ -228,15 +222,15 @@ export default function Licitaciones() {
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por título o expediente..."
-                className="pl-10"
+                className="pl-10 bg-white border-2 shadow-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="flex items-center gap-2 md:w-auto w-full">
-              <Label className="whitespace-nowrap text-sm">Ordenar por:</Label>
+              <Label className="whitespace-nowrap text-sm font-semibold">Ordenar por:</Label>
               <Select value={ordenamiento} onValueChange={(value) => setOrdenamiento(value as OrdenTipo)}>
-                <SelectTrigger className="md:w-[280px] w-full">
+                <SelectTrigger className="md:w-[280px] w-full bg-white border-2 shadow-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -326,7 +320,7 @@ export default function Licitaciones() {
 
                   <Button className="w-full" variant="outline" onClick={() => {
                     setSearchTerm("");
-                    setEstadoFiltro('todas');
+                    setEstadoFiltro('publicadas');
                     setOrdenamiento('relevante');
                   }}>
                     Limpiar filtros
