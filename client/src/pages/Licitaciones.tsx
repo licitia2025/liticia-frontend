@@ -35,7 +35,7 @@ interface ApiResponse {
   items: Licitacion[];
 }
 
-type EstadoFiltro = 'todas' | 'publicadas' | 'en_plazo' | 'ultimos_dias' | 'adjudicadas';
+type EstadoFiltro = 'publicadas' | 'en_plazo' | 'adjudicadas';
 type OrdenTipo = 'relevante' | 'fecha_publicacion' | 'fecha_actualizacion' | 'fecha_limite' | 'presupuesto_desc' | 'presupuesto_asc' | 'fecha_vencimiento' | 'fecha_adjudicacion';
 
 export default function Licitaciones() {
@@ -111,22 +111,18 @@ export default function Licitaciones() {
     
     switch (estadoFiltro) {
       case 'publicadas':
-        // Mostrar todas las licitaciones activas (con fecha límite futura o sin fecha límite definida)
+        // Mostrar todas las licitaciones activas
         // Excluir solo las que están claramente adjudicadas/cerradas
         if (lic.estado === 'adjudicada' || lic.estado === 'resuelta' || lic.estado === 'anulada') {
           return false;
         }
-        return daysUntilDeadline === null || daysUntilDeadline > 0;
+        return true;
       case 'en_plazo':
-        // Licitaciones con más de 7 días hasta la fecha límite
-        return daysUntilDeadline !== null && daysUntilDeadline > 7;
-      case 'ultimos_dias':
-        // Licitaciones con 7 días o menos hasta la fecha límite
-        return daysUntilDeadline !== null && daysUntilDeadline >= 0 && daysUntilDeadline <= 7;
+        // Licitaciones con fecha límite definida y futura (aún se puede presentar)
+        return daysUntilDeadline !== null && daysUntilDeadline > 0;
       case 'adjudicadas':
-        // Licitaciones cuya fecha límite ya pasó o tienen estado adjudicada/resuelta
-        return (daysUntilDeadline !== null && daysUntilDeadline < 0) || 
-               lic.estado === 'adjudicada' || 
+        // Licitaciones con estado adjudicada/resuelta/anulada
+        return lic.estado === 'adjudicada' || 
                lic.estado === 'resuelta' ||
                lic.estado === 'anulada';
       default:
@@ -210,12 +206,6 @@ export default function Licitaciones() {
               onClick={() => setEstadoFiltro('en_plazo')}
             >
               En plazo
-            </Button>
-            <Button
-              variant={estadoFiltro === 'ultimos_dias' ? 'default' : 'outline'}
-              onClick={() => setEstadoFiltro('ultimos_dias')}
-            >
-              Últimos días
             </Button>
             <Button
               variant={estadoFiltro === 'adjudicadas' ? 'default' : 'outline'}
