@@ -131,7 +131,7 @@ class ApiClient {
     }
 
     const query = params.toString();
-    const endpoint = `/licitaciones${query ? `?${query}` : ''}`;
+    const endpoint = `/licitaciones/${query ? `?${query}` : ''}`;
     
     return this.request<LicitacionesResponse>(endpoint);
   }
