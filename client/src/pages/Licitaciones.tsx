@@ -107,19 +107,24 @@ export default function Licitaciones() {
   };
 
   const filtrarPorEstado = (lic: Licitacion): boolean => {
-    if (estadoFiltro === 'todas') return true;
-    
     const daysUntilDeadline = getDaysUntilDeadline(lic.fecha_limite_presentacion);
     
     switch (estadoFiltro) {
       case 'publicadas':
-        return lic.estado === 'publicada';
+        // Mostrar todas las licitaciones que tienen fecha límite futura
+        return daysUntilDeadline !== null && daysUntilDeadline > 0;
       case 'en_plazo':
+        // Licitaciones con más de 7 días hasta la fecha límite
         return daysUntilDeadline !== null && daysUntilDeadline > 7;
       case 'ultimos_dias':
+        // Licitaciones con 7 días o menos hasta la fecha límite
         return daysUntilDeadline !== null && daysUntilDeadline >= 0 && daysUntilDeadline <= 7;
       case 'adjudicadas':
-        return lic.estado === 'adjudicada' || lic.estado === 'resuelta';
+        // Licitaciones cuya fecha límite ya pasó o tienen estado adjudicada/resuelta
+        return (daysUntilDeadline !== null && daysUntilDeadline < 0) || 
+               lic.estado === 'adjudicada' || 
+               lic.estado === 'resuelta' ||
+               lic.estado === 'anulada';
       default:
         return true;
     }
@@ -344,21 +349,7 @@ export default function Licitaciones() {
               </Button>
             </div>
 
-            {/* Resultados */}
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                {loading ? (
-                  "Cargando..."
-                ) : error ? (
-                  <span className="text-destructive">Error: {error}</span>
-                ) : (
-                  <>
-                    Mostrando <span className="font-semibold">{filteredLicitaciones.length}</span> de{" "}
-                    <span className="font-semibold">{total}</span> licitaciones
-                  </>
-                )}
-              </p>
-            </div>
+
 
             {/* Loading state */}
             {loading && (
