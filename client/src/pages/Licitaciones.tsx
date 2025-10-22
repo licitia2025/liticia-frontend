@@ -111,8 +111,12 @@ export default function Licitaciones() {
     
     switch (estadoFiltro) {
       case 'publicadas':
-        // Mostrar todas las licitaciones que tienen fecha límite futura
-        return daysUntilDeadline !== null && daysUntilDeadline > 0;
+        // Mostrar todas las licitaciones activas (con fecha límite futura o sin fecha límite definida)
+        // Excluir solo las que están claramente adjudicadas/cerradas
+        if (lic.estado === 'adjudicada' || lic.estado === 'resuelta' || lic.estado === 'anulada') {
+          return false;
+        }
+        return daysUntilDeadline === null || daysUntilDeadline > 0;
       case 'en_plazo':
         // Licitaciones con más de 7 días hasta la fecha límite
         return daysUntilDeadline !== null && daysUntilDeadline > 7;
